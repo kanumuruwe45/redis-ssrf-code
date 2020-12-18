@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <title>Login</title>
+         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400" rel="stylesheet">
+         <link rel="stylesheet" href="classless.css" />
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet"
+            integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+            integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+            crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <div class="row" style="margin-top: 10%;">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <h5 class="card-header">Login</h5>
+                    <div class="card-body">
+                    <form method="POST" action="/">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input id="email" name="email" type="email" placeholder="johndoe@email.com" class="form-control">                            
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input id="password" name="password" type="password" placeholder="superStrongPassword" class="form-control">
+                        </div>
+                        <input id="login" type="submit" value="Login" class="btn btn-primary">
+                        <a href="/signup" class="btn btn-primary pull-right">Sign up</a>
+                    </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,66 @@
+<html>
+    <head>
+        <title>
+            Customer Management
+        </title>
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400" rel="stylesheet"><link rel="stylesheet" href="classless.css" />
+        <link rel="stylesheet" href="https://classless.de/classless.css">
+    </head>
+    <body>
+        <div class="row">
+            <nav>
+                <ul>
+                  <li>Customer Management App</li>
+                  <li><a href="/customer">Manage Customers</a></li>
+                  <li><a href="/genpdf">Generate PDF</a></li>
+                  <li class="float-right"><a href="/logout">Logout</a></li>
+                </ul>
+              </nav>
+        </div>
+        <div class="row">
+            <div class="col-4"></div>
+            <div class="col-4">
+                {% if all_customers is not none %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in all_customers %}
+                            <tr>
+                                <td>{{ customer['name'] }}</td>
+                                <td>{{ customer['url'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+            <div class="col-4"></div>
+        </div>
+        <div class="row">
+            <div class="col-4">
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <h4>Login</h4>
+                    <br>
+                    <form method="POST" action="/customer">
+                        <label for="name">Customer Name</label>
+                        <input id="name" name="name" type="name" placeholder="Acme Co">
+                        <br>
+                        <label for="url">url</label>
+                        <input id="url" name="url" type="url" placeholder="https://acme.com">
+                        <br>
+                        <input id="submit" type="submit" value="create">
+                    </form>
+                </div>
+            </div>
+            <div class="col-4">
+            </div>
+        </div>
+    </body>
+</html>
