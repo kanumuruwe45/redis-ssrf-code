@@ -201,7 +201,7 @@ def signup():
             count="ec2instance"+str(keys+1)
           
             
-            redisClient.hmset(count, userdetails)
+            redisClient.hset(count, userdetails)
             userdetails={}
            
            
