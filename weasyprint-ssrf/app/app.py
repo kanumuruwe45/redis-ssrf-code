@@ -17,6 +17,14 @@ from functools import wraps
 import bcrypt
 from weasyprint import HTML
 import os
+from tornado.wsgi import WSGIContainer
+from tornado.ioloop import IOLoop
+from tornado.web import FallbackHandler, RequestHandler, Application
+from tornado.websocket import WebSocketHandler
+
+
+import redis
+redisClient = redis.StrictRedis(host="127.0.0.1",port=6379,db=0,decode_responses=True)
 
 DATABASE = "salesapp.db"
 SECRET_KEY = token_urlsafe(32)
@@ -56,11 +64,12 @@ def create_tables():
 
 
 def auth_user(user):
+   
     session["logged_in"] = True
-    session["user_id"] = user.id
-    session["email"] = user.email
+    session["user_id"] = user['fname']
+    session["email"] = user['email']
     session.permanent = True
-    flash("You are logged in as {}".format(user.email))
+    flash("You are logged in as {}".format(user['email']))
 
 
 def login_required(f):
@@ -91,18 +100,19 @@ def pre_login():
     if request.method == "GET":
         return render_template("index.html")
     elif request.method == "POST":
-        ref_user = User.get_or_none(User.email == request.form.get("email"))
-        if ref_user:
-            match_pass = bcrypt.checkpw(
-                str(request.form.get("password")).encode(),
-                str(ref_user.password).encode(),
-            )
-            if match_pass:
-                auth_user(ref_user)
+        query='ec2instance*'
+        keys = redisClient.keys(query)
+       
+        temp=[]
+    
+        for j in keys:
+            temp = redisClient.hgetall(j)
+            if request.form.get("email")==temp['email'] and bcrypt.checkpw(str(request.form.get("password")).encode(), temp["pwd"].encode() ):
+                auth_user(temp)
+                
+                
                 return redirect(url_for("go_home"))
-            else:
-                return redirect(url_for("pre_login"))
-
+           
         return redirect(url_for("pre_login"))
 
 
@@ -163,18 +173,39 @@ def update_user():
 
 @app.route("/signup", methods=["POST", "GET"])
 def signup():
+    
     if request.method == "POST":
+        userdetails={}
+       
         if request.form.get("email") and request.form.get("password"):
-            user = User(
-                email=request.form.get("email"),
-                password=bcrypt.hashpw(
-                    str(request.form.get("password")).encode(), bcrypt.gensalt()
-                ),
-                remarks=request.form.get("remarks"),
-                first_name=request.form.get("first_name"),
-                last_name=request.form.get("last_name"),
-            )
-            user.save()
+            print(request.form.get("password"))
+            query='ec2instance*'
+            keys = redisClient.keys(query)
+            
+            
+            for j in keys:
+                temp = redisClient.hgetall(j)
+                if request.form.get("email")==temp['email']:
+                    return render_template("signup.html")
+            userdetails['fname']=str(request.form.get("first_name"))
+            userdetails['sname']=str(request.form.get("last_name"))
+            userdetails['pwd']=bcrypt.hashpw(str(request.form.get("password")).encode(), bcrypt.gensalt())
+            userdetails['email']=str(request.form.get("email"))
+            userdetails['remarks']=str(request.form.get("remarks"))
+            query='ec2instance*'
+            keys = len(redisClient.keys(query))
+            
+            if keys<=0:
+                keys=1
+            else:
+                keys=keys+1
+            count="ec2instance"+str(keys+1)
+          
+            
+            redisClient.hmset(count, userdetails)
+            userdetails={}
+           
+           
             return redirect(url_for("pre_login"))
         else:
             return redirect(url_for("pre_login"))
@@ -188,9 +219,19 @@ def signup():
 @login_required
 def gen_pdf():
     email = session.get("email")
-    ref_user = User.get_or_none(User.email == email)
-    if ref_user:
-        html_string = """
+    query='ec2instance*'
+    keys = redisClient.keys(query)
+  
+    temp=[]
+    user={}
+    for j in keys:
+        temp = redisClient.hgetall(j)
+        if email==temp['email']:
+
+            user=temp
+            print("Generate pdf")
+
+            html_string = """
         <html>
             <head>
                 <title>%s's Profile</title>
@@ -203,27 +244,36 @@ def gen_pdf():
             </body>
         </html>
         """ % (
-            ref_user.email,
-            ref_user.email,
-            ref_user.first_name,
-            ref_user.last_name,
-            ref_user.remarks,
+            user['email'],
+            user['email'],
+            user['fname'],
+            user['sname'],
+            user['remarks']
         )
-        try:
-            os.makedirs('static')
-        except OSError as e:
-           pass
+            try:
+                os.makedirs('static')
+            except OSError as e:
+                pass
+            
+            html = HTML(string=html_string)
+            name = "{}-{}.pdf".format(
+            str(user['email']), int(datetime.now().timestamp())
+            )
+            html.write_pdf("static/{}".format(name))
+            return send_from_directory(directory="static", filename=name)
 
-        html = HTML(string=html_string)
-        name = "{}-{}.pdf".format(
-            str(email).replace("@", "-"), int(datetime.now().timestamp())
-        )
-        html.write_pdf("static/{}".format(name))
-        return send_from_directory(directory="static", filename=name)
-
+           
     return "Unable to find route"
 
 
 if __name__ == "__main__":
     create_tables()
-    app.run(host="0.0.0.0", debug=True)
+   
+    wsgi_app = WSGIContainer(app)
+
+    application = Application([
+        (r'.*', FallbackHandler, dict(fallback=wsgi_app))
+    ])
+    application.listen(3000)
+    IOLoop.instance().start()
+    # app.run(host="0.0.0.0", debug=True)
