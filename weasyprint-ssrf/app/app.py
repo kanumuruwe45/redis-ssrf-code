@@ -23,7 +23,7 @@ from tornado.web import FallbackHandler, RequestHandler, Application
 from tornado.websocket import WebSocketHandler
 
 
-import redis
+import redis 
 redisClient = redis.StrictRedis(host="127.0.0.1",port=6379,db=0,decode_responses=True)
 
 DATABASE = "salesapp.db"
@@ -31,6 +31,10 @@ SECRET_KEY = token_urlsafe(32)
 
 app = Flask(__name__, static_folder="static")
 app.config.from_object(__name__)
+#commenetd
+
+
+# Hello Rajehs
 # app.config.update(
 #     SESSION_COOKIE_SECURE = False,
 #     REMEMBER_COOKIE_SECURE = False
