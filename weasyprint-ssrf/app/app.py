@@ -264,7 +264,7 @@ def gen_pdf():
             str(user['email']), int(datetime.now().timestamp())
             )
             html.write_pdf("static/{}".format(name))
-            return send_from_directory(directory="static", filename=name)
+            return send_from_directory(directory="static", path=name)
 
            
     return "Unable to find route"
